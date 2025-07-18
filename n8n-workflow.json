@@ -1,0 +1,516 @@
+{
+  "name": "reddit integration for startup ideas",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8b4093c1-bc30-4030-84f8-e40688180d1b",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "subreddit": "slack",
+        "keyword": "Why I stopped using",
+        "limit": 10,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.reddit",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "715aaa1f-5ee5-489d-b950-ec54c4b959c9",
+      "name": "Search for a post",
+      "credentials": {
+        "redditOAuth2Api": {
+          "id": "tEHGQysNHRoH2iMn",
+          "name": "Reddit account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b2d1e176-52f6-4e3a-9541-3ee00e9a5e73",
+              "leftValue": "={{ $json.ups }}",
+              "rightValue": 5,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "8ce7eb9b-e9bd-4756-943c-ba83ff2d1ff8",
+              "leftValue": "={{ $json.selftext }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "277b6368-a2b1-4b3b-834e-1be511b8b2c1",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c2675bf2-e782-4295-ba07-12e67a6d7455",
+              "name": "selftext",
+              "value": "={{ $json.selftext }}",
+              "type": "string"
+            },
+            {
+              "id": "2f9bb05a-bf54-4351-b835-531685d8ef6d",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "87a5e127-7dc0-413f-b8ab-fa4f1c38d362",
+              "name": "created",
+              "value": "={{ $json.created }}",
+              "type": "number"
+            },
+            {
+              "id": "694d1410-422a-4f91-9c45-a145f19358b1",
+              "name": "ups",
+              "value": "={{ $json.ups }}",
+              "type": "number"
+            },
+            {
+              "id": "c10b9b36-e3f4-44f3-945f-68915cc8ca98",
+              "name": "url",
+              "value": "={{ $json.url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        656,
+        -16
+      ],
+      "id": "43a5d280-a59e-4e46-8b41-e3855350519d",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Define whether the reddit post is talking about the problems faced by the users of slack or they need a solution on  how they want new features on Slack. The post should mention a specific problem faced by the user.\n\nReddit post:  {{ $json.selftext }}\n\nIs this post about a problem that users are facing about Slack or they need new features, Just answer with yes or no.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        832,
+        -128
+      ],
+      "id": "968ae891-caca-4d51-988d-492c81a93954",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        832,
+        -304
+      ],
+      "id": "5e7fd32c-c944-4c72-aa76-93471d891136",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "39kPLOqGBnlKCkxa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1168,
+        -32
+      ],
+      "id": "541d9c85-95da-4c4b-9853-388989898045",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Based on the reddit post, suggest a plan or a solution on how I fix the issues the users are facing with Slack.\n\nReddit post:  {{ $json.selftext }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        1584,
+        -128
+      ],
+      "id": "bd0f79d7-3fc0-4fbb-bd9b-9a2d118bd2d3",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        -304
+      ],
+      "id": "c7f10db2-ec45-4c2d-b123-c237d6b8bb22",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "39kPLOqGBnlKCkxa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1952,
+        -48
+      ],
+      "id": "bf390d39-40fe-4444-bd74-27ff59204dd0",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e4a0a1fa-f45b-4b45-b501-b542d5abda4f",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "Yes",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        1376,
+        -32
+      ],
+      "id": "c38a1299-015e-4540-804e-dcfae50abf66",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1PJ7pfRYez9QHukx110NNTcnhDW-RocEy_5DX7OSPjuM",
+          "mode": "list",
+          "cachedResultName": "reddit posts",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1PJ7pfRYez9QHukx110NNTcnhDW-RocEy_5DX7OSPjuM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1PJ7pfRYez9QHukx110NNTcnhDW-RocEy_5DX7OSPjuM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Title": "={{ $json.title }}",
+            "Upvotes": "={{ $json.ups }}",
+            "URL": "={{ $json.url }}",
+            "Solution": "={{ $json.text }}",
+            "Original Problem": "={{ $json.selftext }}",
+            "Creation Date": "={{ $json.created }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Original Problem",
+              "displayName": "Original Problem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Creation Date",
+              "displayName": "Creation Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Upvotes",
+              "displayName": "Upvotes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "URL",
+              "displayName": "URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Solution",
+              "displayName": "Solution",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        2160,
+        -48
+      ],
+      "id": "030b7ece-fa5d-44a6-9722-0c00b0ca9da8",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ZVGj3U8Xt0NxYtZM",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Search for a post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search for a post": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Kolkata",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1
+  },
+  "versionId": "1c51728a-511b-437d-9e16-a1e4a943950c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c9d772d030f00a04ecbde81287279535c9c67dafcae681ae81fdecfab2f2873d"
+  },
+  "id": "CAq8ol6mVgDa1ExQ",
+  "tags": []
+}
