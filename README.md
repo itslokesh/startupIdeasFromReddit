@@ -7,13 +7,6 @@ Automate startup idea discovery from Reddit by identifying real user pain points
 
 ---
 
-## 🎥 Demo
-
-> Watch the full tutorial video here: **[📺 YouTube Demo Link](#)**
-> *(*Replace the above with actual YouTube URL when available*)*
-
----
-
 ## 🧠 What This Project Does
 
 📅 Scrapes Reddit for posts expressing frustration with products
